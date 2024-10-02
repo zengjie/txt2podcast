@@ -1,0 +1,6 @@
+*.mp3
+*.yaml
+*.txt
+*.xml
+
+.env*
