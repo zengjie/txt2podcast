@@ -7,3 +7,4 @@
 .env*
 
 !background.mp3
+!requirements.txt
