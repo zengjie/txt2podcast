@@ -2,5 +2,8 @@
 *.yaml
 *.txt
 *.xml
+*.wav
 
 .env*
+
+!background.mp3

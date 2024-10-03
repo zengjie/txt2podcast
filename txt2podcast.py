@@ -40,7 +40,7 @@ def generate_script_content(text: str) -> str:
     {text}
 
     Create the script following these key guidelines:
-    1. Language: The entire script must be in Chinese (Mandarin), except for the names Sophia and Justin.
+    1. Language: The entire script must be in Chinese (Mandarin), except for the names Sophia and Justin. Do not use unneccessary English words.
     2. Content: Maintain the depth and insights from the original text, but present them in a more accessible and emotional way.
     3. Tone: Keep it very conversational, natural, and emotionally expressive, as if two close friends are discussing the topic.
     4. Simplify: Break down complex ideas into digestible bits. Use analogies and relatable examples when appropriate.
@@ -55,10 +55,14 @@ def generate_script_content(text: str) -> str:
     13. Natural dialogue: Avoid unnecessary addressing of each other by name. Sophia may occasionally use Justin's name, but Justin should never call Sophia by name.
     14. Justin's responses: Justin should respond directly and emotionally to questions or comments without using Sophia's name. He should use context and natural conversation flow instead.
     15. Length limit: The script must contain no more than 24 total exchanges between Sophia and Justin combined. This is to ensure the final SSML doesn't exceed technical limitations.
+    16. Colloquial language: Justin should use more casual, everyday expressions and colloquialisms in his speech. His language should be less formal and more like how people actually talk in daily conversations.
+    17. Contractions and filler words: Include appropriate Chinese contractions and filler words in Justin's speech to make it sound more natural and less rehearsed.
+    18. Incomplete sentences: Sometimes, Justin can use incomplete sentences or trail off, as people often do in real conversations.
+    19. Idioms and slang: Incorporate common Chinese idioms and slang (when appropriate) to make Justin's speech more relatable and less academic.
 
     Roles:
     SOPHIA: The host. Curious, engaging, and emotionally expressive. Guides the conversation with enthusiasm, asks insightful questions, and often offers a layperson's perspective with genuine emotional reactions. May occasionally use Justin's name.
-    JUSTIN: The expert guest. Knowledgeable but approachable and emotionally open. Explains concepts clearly with passion, provides analysis and context with excitement, and isn't afraid to admit when something is complex or surprising. Never calls Sophia by name.
+    JUSTIN: The expert guest. Knowledgeable but very approachable and emotionally open. Explains concepts clearly with passion, provides analysis and context with excitement, and isn't afraid to admit when something is complex or surprising. Uses casual, everyday language and colloquialisms. Never calls Sophia by name.
 
     Format the script as follows:
     SOPHIA: [Sophia's lines in Chinese, including emotional cues like laughter or gasps in parentheses]
@@ -111,8 +115,10 @@ def design_sentence_delivery(script: str) -> List[Dict[str, str]]:
     - Use styledegree sparingly, with most values between 0.8 and 1.5. Only use higher values (up to 2.0) for exceptional emphasis.
     - Adjust pitch and rate minimally. Use these adjustments sparingly and only when necessary for emphasis or to convey specific emotions.
     - Use speaking styles wisely to make the conversation engaging, ensuring changes are natural and appropriate to the content.
-    - Include laughter text like "haha" or "hehe" where it's clearly appropriate to the conversation.
+    - Insert laughter text like "哈哈!" where it's clearly appropriate to the conversation.
+    - Include natural interjections like "嗯", "啊", "哦" with appropriate intonation, but use sparingly
 
+    
     Return the result as a YAML array of objects, each containing the above information.
     Your response must be a valid YAML array and nothing else. Do not include any explanations, code block markers, or text outside the YAML array.
     Do not use quotes for the sentence field unless absolutely necessary (e.g., if the sentence contains a colon).
@@ -161,6 +167,29 @@ def design_sentence_delivery(script: str) -> List[Dict[str, str]]:
 
 def generate_ssml_content(delivery_design: List[Dict[str, str]]) -> str:
     client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+    ssml_reference = """
+<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="en-US">
+  <voice name="en-US-JennyNeural">
+    <prosody rate="+5.00%" pitch="+4%">Hey Sarah!</prosody> <prosody rate="+10.00%">Did you hear about the new café opening downtown?</prosody>
+  </voice>
+  
+  <voice name="en-US-GuyNeural">
+    <prosody rate="+3.00%">Oh, hi Alex!</prosody> <mstts:ttsbreak strength="weak"/> <prosody pitch="-2%">No, I haven't.</prosody> <prosody rate="+8.00%">What's it called?</prosody>
+  </voice>
+  
+  <voice name="en-US-JennyNeural">
+    <prosody rate="+5.00%">It's called</prosody> <mstts:ttsbreak strength="none"/><prosody pitch="+5%" contour="(60%, -20%) (100%, -35%)">The Cozy Corner</prosody>. 
+    <prosody rate="+10.00%">I heard they have amazing pastries and specialty coffee.</prosody> 
+    <prosody pitch="+2%" rate="+7.00%">Want to check it out this weekend?</prosody>
+  </voice>
+  
+  <voice name="en-US-GuyNeural">
+    <prosody pitch="+3%" rate="+5.00%">That sounds great!</prosody> <mstts:ttsbreak strength="weak"/>
+    <prosody contour="(0%, -10%)(50%, +0%)(100%, -10%)">What time were you thinking?</prosody>
+  </voice>
+</speak>
+    """
     
     prompt = f"""
     Generate SSML (Speech Synthesis Markup Language) content based on the following delivery design:
@@ -178,21 +207,19 @@ def generate_ssml_content(delivery_design: List[Dict[str, str]]) -> str:
     8. The entire SSML should be in Chinese (Mandarin), except for the names Sophia and Justin.
 
     Additional natural conversation style guidelines:
-    9. Implement varied speech rates using <prosody rate> tags:
-       - Increase rate for excited or urgent statements (e.g., "+10.00%")
-       - Slightly increase for casual remarks (e.g., "+5.00%")
-    10. Use dynamic pitch adjustments with <prosody pitch> and <prosody contour> tags:
+    9. Use dynamic pitch adjustments with <prosody pitch> and <prosody contour> tags:
        - Implement slight pitch drops at the end of statements or questions
        - Vary pitch to emphasize certain words or express emotions
-    11. Create seamless transitions using <mstts:ttsbreak strength="none" /> between phrases that should flow together
-    12. Insert natural pauses with <mstts:ttsbreak /> tags to mimic speech rhythms and thinking pauses
-    13. Use <phoneme> tags for words requiring specific pronunciation or emphasis
-    14. Incorporate subtle emotional cues through pitch and rate variations
-    15. Include natural interjections like "嗯", "啊", "哦" with appropriate intonation, but use sparingly
-    16. Implement slight overlaps or quick responses where appropriate to mimic natural conversation flow
-    17. Use <break strength="x-weak"/> after English names to mimic natural pauses.
+    10. Create seamless transitions using <mstts:ttsbreak strength="none" /> between phrases that should flow together
+    11. Incorporate subtle emotional cues through pitch and rate variations
+    12. Implement slight overlaps or quick responses where appropriate to mimic natural conversation flow
+    13. Use <break strength="x-weak"/> after English names to mimic natural pauses.
+    14. Maintain consistent style for consecutive sentences from the same speaker, unless there's a clear emotional shift.
 
     Return only the generated SSML content, without any explanations or additional text.
+
+    Using following SSML as reference:
+    {ssml_reference}
     """
 
     response = client.messages.create(
