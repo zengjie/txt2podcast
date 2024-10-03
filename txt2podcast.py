@@ -160,58 +160,49 @@ def design_sentence_delivery(script: str) -> List[Dict[str, str]]:
         raise
 
 def generate_ssml_content(delivery_design: List[Dict[str, str]]) -> str:
-    ssml = '<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" version="1.0" xml:lang="zh-CN">'
+    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    
+    prompt = f"""
+    Generate SSML (Speech Synthesis Markup Language) content based on the following delivery design:
 
-    current_speaker = None
-    current_style = None
-    for sentence in delivery_design:
-        if sentence['speaker'] != current_speaker:
-            if current_speaker is not None:
-                ssml += '</mstts:express-as></voice>'
-            current_speaker = sentence['speaker']
-            current_style = None
-            voice = "zh-CN-XiaoxiaoMultilingualNeural" if current_speaker == 'SOPHIA' else "zh-CN-YunyiMultilingualNeural"
-            ssml += f'<voice name="{voice}">'
-        
-        if sentence.get('break_before'):
-            ssml += f'<break strength="{sentence["break_before"]}"/>'
-        
-        if sentence['style'] != current_style:
-            if current_style is not None:
-                ssml += '</mstts:express-as>'
-            current_style = sentence['style']
-            styledegree = min(float(sentence.get("styledegree", "1.0")), 1.5)  # Cap styledegree at 1.5
-            ssml += f'<mstts:express-as style="{current_style}" styledegree="{styledegree}">'
-        
-        prosody_attrs = []
-        if sentence.get('rate'):
-            prosody_attrs.append(f'rate="{sentence["rate"]}"')
-        if sentence.get('pitch'):
-            prosody_attrs.append(f'pitch="{sentence["pitch"]}"')
-        
-        if prosody_attrs:
-            ssml += f'<prosody {" ".join(prosody_attrs)}>'
-        
-        if sentence.get('emphasis'):
-            words = sentence['sentence'].split()
-            for word in words:
-                if word in sentence['emphasis']:
-                    ssml += f'<prosody volume="+5%" pitch="+2%" rate="90%">{word}</prosody> '
-                else:
-                    ssml += f'{word} '
-        else:
-            ssml += sentence['sentence']
-        
-        if prosody_attrs:
-            ssml += '</prosody>'
-        
-        if sentence.get('break_after'):
-            ssml += f'<break strength="{sentence["break_after"]}"/>'
+    {yaml.dump(delivery_design, allow_unicode=True)}
 
-    if current_speaker is not None:
-        ssml += '</mstts:express-as></voice>'
+    Guidelines for SSML generation:
+    1. Use the <speak> tag as the root element with appropriate xmlns attributes.
+    2. Use <voice> tags to switch between speakers (SOPHIA and JUSTIN).
+    3. Use <mstts:express-as> tags for different speaking styles.
+    4. Use <prosody> tags for rate and pitch adjustments.
+    5. Use <break> tags where specified in the delivery design.
+    6. Ensure proper nesting of all tags.
+    7. Use "zh-CN-XiaoxiaoMultilingualNeural" voice for SOPHIA and "zh-CN-YunyiMultilingualNeural" for JUSTIN.
+    8. The entire SSML should be in Chinese (Mandarin), except for the names Sophia and Justin.
 
-    ssml += '</speak>'
+    Additional natural conversation style guidelines:
+    9. Implement varied speech rates using <prosody rate> tags:
+       - Increase rate for excited or urgent statements (e.g., "+10.00%")
+       - Slightly increase for casual remarks (e.g., "+5.00%")
+    10. Use dynamic pitch adjustments with <prosody pitch> and <prosody contour> tags:
+       - Implement slight pitch drops at the end of statements or questions
+       - Vary pitch to emphasize certain words or express emotions
+    11. Create seamless transitions using <mstts:ttsbreak strength="none" /> between phrases that should flow together
+    12. Insert natural pauses with <mstts:ttsbreak /> tags to mimic speech rhythms and thinking pauses
+    13. Use <phoneme> tags for words requiring specific pronunciation or emphasis
+    14. Incorporate subtle emotional cues through pitch and rate variations
+    15. Include natural interjections like "嗯", "啊", "哦" with appropriate intonation, but use sparingly
+    16. Implement slight overlaps or quick responses where appropriate to mimic natural conversation flow
+
+    Return only the generated SSML content, without any explanations or additional text.
+    """
+
+    response = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        max_tokens=8192,
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    ssml = response.content[0].text.strip()
 
     # Debug: Save the generated SSML to a file
     with open("debug_ssml.xml", "w", encoding="utf-8") as debug_file:
