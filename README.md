@@ -62,6 +62,38 @@ txt2podcast provides several commands for different stages of the podcast genera
 
 Replace `<input_source>` with a file path or URL, and `<output_file>` with the desired output file path.
 
+## Examples
+
+1. Generate a complete podcast from a URL:
+   ```
+   python txt2podcast.py generate https://example.com/article.html output_podcast.mp3 --music background.mp3
+   ```
+
+2. Generate a script from a local text file:
+   ```
+   python txt2podcast.py generate-script input_article.txt output_script.txt --debug
+   ```
+
+3. Design sentence delivery for an existing script:
+   ```
+   python txt2podcast.py design-delivery script.txt delivery_design.yaml
+   ```
+
+4. Generate SSML from a delivery design:
+   ```
+   python txt2podcast.py generate-ssml delivery_design.yaml output_ssml.xml --debug
+   ```
+
+5. Synthesize speech from an SSML file:
+   ```
+   python txt2podcast.py synthesize-speech input_ssml.xml output_speech.wav
+   ```
+
+6. Generate a podcast with debug mode and custom background music:
+   ```
+   python txt2podcast.py generate long_article.txt final_podcast.mp3 --debug --music custom_music.mp3
+   ```
+
 ## License
 
 MIT
