@@ -190,6 +190,7 @@ def generate_ssml_content(delivery_design: List[Dict[str, str]]) -> str:
     14. Incorporate subtle emotional cues through pitch and rate variations
     15. Include natural interjections like "嗯", "啊", "哦" with appropriate intonation, but use sparingly
     16. Implement slight overlaps or quick responses where appropriate to mimic natural conversation flow
+    17. Use <break strength="x-weak"/> after English names to mimic natural pauses.
 
     Return only the generated SSML content, without any explanations or additional text.
     """
